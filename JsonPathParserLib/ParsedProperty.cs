@@ -58,7 +58,7 @@
                 if (string.IsNullOrEmpty(_path))
                     return 0;
 
-                return _path.Split(new char[] { PathDivider, '[' }).Length;
+                return _path.Split(PathDivider).Length;
             }
         }
 
