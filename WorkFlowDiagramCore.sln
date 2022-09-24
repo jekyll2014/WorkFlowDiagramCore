@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorkFlowDiagramCore", "WorkFlowDiagram\WorkFlowDiagramCore.csproj", "{87F072EE-2348-4329-A59E-6ED2A630D6E7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonEditorForm", "JsonEditorForm\JsonEditorForm.csproj", "{90AC616B-F41C-4138-9F34-733FA4038A98}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPathParserLib", "JsonPathParserLib\JsonPathParserLib.csproj", "{A5E16A41-A00F-4D35-9432-5D546F4FC0ED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutomaticGraphLayout", "automatic-graph-layout-master\GraphLayout\MSAGL\AutomaticGraphLayout.csproj", "{E7124598-BC90-4D76-A7ED-A13A629AD6D9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutomaticGraphLayout.Drawing", "automatic-graph-layout-master\GraphLayout\Drawing\AutomaticGraphLayout.Drawing.csproj", "{853481CA-01B9-4A88-8C12-4E071C607E4E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphViewerGDI", "automatic-graph-layout-master\GraphLayout\tools\GraphViewerGDI\GraphViewerGDI.csproj", "{4707ABDB-F830-4545-A386-531FF366D405}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87F072EE-2348-4329-A59E-6ED2A630D6E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87F072EE-2348-4329-A59E-6ED2A630D6E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87F072EE-2348-4329-A59E-6ED2A630D6E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87F072EE-2348-4329-A59E-6ED2A630D6E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90AC616B-F41C-4138-9F34-733FA4038A98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90AC616B-F41C-4138-9F34-733FA4038A98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90AC616B-F41C-4138-9F34-733FA4038A98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90AC616B-F41C-4138-9F34-733FA4038A98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5E16A41-A00F-4D35-9432-5D546F4FC0ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5E16A41-A00F-4D35-9432-5D546F4FC0ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5E16A41-A00F-4D35-9432-5D546F4FC0ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5E16A41-A00F-4D35-9432-5D546F4FC0ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7124598-BC90-4D76-A7ED-A13A629AD6D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7124598-BC90-4D76-A7ED-A13A629AD6D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7124598-BC90-4D76-A7ED-A13A629AD6D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7124598-BC90-4D76-A7ED-A13A629AD6D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{853481CA-01B9-4A88-8C12-4E071C607E4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{853481CA-01B9-4A88-8C12-4E071C607E4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{853481CA-01B9-4A88-8C12-4E071C607E4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{853481CA-01B9-4A88-8C12-4E071C607E4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4707ABDB-F830-4545-A386-531FF366D405}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4707ABDB-F830-4545-A386-531FF366D405}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4707ABDB-F830-4545-A386-531FF366D405}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4707ABDB-F830-4545-A386-531FF366D405}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EA2A8658-338F-4D27-8B92-1F70203A0F4A}
+	EndGlobalSection
+EndGlobal

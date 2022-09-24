@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\automatic-graph-layout-master\GraphLayout\Drawing\AutomaticGraphLayout.Drawing.csproj" />
+    <ProjectReference Include="..\automatic-graph-layout-master\GraphLayout\MSAGL\AutomaticGraphLayout.csproj" />
+    <ProjectReference Include="..\automatic-graph-layout-master\GraphLayout\tools\GraphViewerGDI\GraphViewerGDI.csproj" />
+    <ProjectReference Include="..\JsonEditorForm\JsonEditorForm.csproj" />
+    <ProjectReference Include="..\JsonPathParserLib\JsonPathParserLib.csproj" />
+  </ItemGroup>
+
+</Project>
