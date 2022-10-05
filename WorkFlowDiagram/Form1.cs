@@ -31,14 +31,11 @@ namespace WorkFlowDiagram
 
         // configuration
         private const string PluginConfigFile = "appsettings.json";
-
         private Config<WorkFlowDiagramSettings> configBuilder = new();
 
         // diagram settings
         private const string _formCaption = "WorkFlow diagram";
-
         private const string _inputFileExtension = "*.json";
-
         private readonly Shape _shapeType = Shape.Box;
         private readonly ArrowStyle _arrowLineType = ArrowStyle.Normal;
         private readonly ArrowStyle _backArrowLineType = ArrowStyle.Diamond;
@@ -51,15 +48,13 @@ namespace WorkFlowDiagram
         private Color _returnOnlyShapeColor = Color.BlueViolet;
 
         // JSON parser settings
+        private const string RootName = "";
+        private const char PathDivider = '\\';
         private JsonPathParser _parser = new JsonPathParser();
 
-        private const string RootName = "";
-        private const char _pathDivider = '\\';
-
         // Json viewer window
-        private JsonViewer? _sideViewer;
-
         private const string PreViewCaption = "JSON File ";
+        private JsonViewer? _sideViewer;
         private bool _useVsCode = false;
         private readonly bool _singleLineBrackets = false;
         private WinPosition _editorPosition;
@@ -90,8 +85,10 @@ namespace WorkFlowDiagram
             { "updatecertificate","update" }
         };
 
-        private PlaneTransformation? mouseDownTransform;
-        private Point mouseDownPoint;
+        private PlaneTransformation? _mouseDownTransform;
+        private Point _mouseDownPoint;
+
+        private Node _currentState;
 
         #region GUI
 
@@ -125,11 +122,13 @@ namespace WorkFlowDiagram
                 TrimComplexValues = false,
                 SaveComplexValues = true,
                 RootName = RootName,
-                JsonPathDivider = _pathDivider,
+                JsonPathDivider = PathDivider,
                 SearchStartOnly = true
             };
 
-            comboBox_layoutMode.Items.AddRange(Enum.GetNames(typeof(Microsoft.Msagl.GraphViewerGdi.LayoutMethod)));
+            //comboBox_layoutMode.Items.AddRange(Enum.GetNames(typeof(Microsoft.Msagl.GraphViewerGdi.LayoutMethod)));
+            comboBox_layoutMode.Items.Add(Enum.GetName(LayoutMethod.SugiyamaScheme));
+            comboBox_layoutMode.Items.Add(Enum.GetName(LayoutMethod.IcrementalLayout));
             comboBox_layoutMode.SelectedItem = _currentLayoutMode.ToString();
 
             string[] args = Environment.GetCommandLineArgs();
@@ -157,6 +156,24 @@ namespace WorkFlowDiagram
             else
             {
                 folderBrowserDialog1.SelectedPath = configBuilder.ConfigStorage.LastFolder;
+            }
+
+            if (_showStateElements)
+            {
+                if (_currentLayoutMode.ToString() != Enum.GetName(LayoutMethod.SugiyamaScheme)
+                    && _currentLayoutMode.ToString() != Enum.GetName(LayoutMethod.IcrementalLayout))
+                {
+                    comboBox_layoutMode.SelectedItem = Enum.GetName(LayoutMethod.SugiyamaScheme);
+                }
+
+                comboBox_layoutMode.Items.Remove(Enum.GetName(LayoutMethod.MDS));
+                comboBox_layoutMode.Items.Remove(Enum.GetName(LayoutMethod.Ranking));
+                comboBox_layoutMode.SelectedItem = _currentLayoutMode.ToString();
+            }
+            else
+            {
+                comboBox_layoutMode.Items.Add(Enum.GetName(LayoutMethod.MDS));
+                comboBox_layoutMode.Items.Add(Enum.GetName(LayoutMethod.Ranking));
             }
 
             var filesList = Directory.GetFiles(folderBrowserDialog1.SelectedPath,
@@ -257,14 +274,14 @@ namespace WorkFlowDiagram
             if (_isSelectedTag)
                 return;
 
-            var newObj = gViewer1.ObjectUnderMouseCursor;
-            if (newObj == null)
+            var objectUnderCursor = gViewer1.ObjectUnderMouseCursor;
+            if (objectUnderCursor == null)
             {
                 textBox_tag.Clear();
             }
-            else
+            else if (objectUnderCursor.DrawingObject is DrawingObject o && o.IsVisible)
             {
-                var selectedObject = newObj.DrawingObject;
+                var selectedObject = objectUnderCursor.DrawingObject;
                 if (selectedObject is Edge edge)
                 {
                     if (edge.UserData is ShapeTag tag)
@@ -305,7 +322,7 @@ namespace WorkFlowDiagram
             {
                 _currentLayoutMode = layoutMode;
                 gViewer1.CurrentLayoutMethod = _currentLayoutMode;
-                //gViewer1.Graph = gViewer1.Graph;
+                gViewer1.Graph = gViewer1.Graph;
             }
 
             gViewer1.Focus();
@@ -320,8 +337,8 @@ namespace WorkFlowDiagram
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Middle && ClientRectangle.Contains(PointToClient(MousePosition)))
             {
-                mouseDownPoint = new Point(e.X, e.Y);
-                mouseDownTransform = gViewer1.Transform.Clone();
+                _mouseDownPoint = new Point(e.X, e.Y);
+                _mouseDownTransform = gViewer1.Transform.Clone();
             }
         }
 
@@ -335,10 +352,10 @@ namespace WorkFlowDiagram
         {
             if (ClientRectangle.Contains(args.X, args.Y))
             {
-                if (mouseDownTransform != null)
+                if (_mouseDownTransform != null)
                 {
-                    gViewer1.Transform[0, 2] = mouseDownTransform[0, 2] + args.X - mouseDownPoint.X;
-                    gViewer1.Transform[1, 2] = mouseDownTransform[1, 2] + args.Y - mouseDownPoint.Y;
+                    gViewer1.Transform[0, 2] = _mouseDownTransform[0, 2] + args.X - _mouseDownPoint.X;
+                    gViewer1.Transform[1, 2] = _mouseDownTransform[1, 2] + args.Y - _mouseDownPoint.Y;
                 }
                 gViewer1.Invalidate();
             }
@@ -346,30 +363,62 @@ namespace WorkFlowDiagram
 
         private void GViewer1_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button != System.Windows.Forms.MouseButtons.Left)
-                return;
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
 
-            var newObj = gViewer1.ObjectUnderMouseCursor;
-            if (newObj == null)
-            {
-                _isSelectedTag = false;
-                textBox_tag.Clear();
-            }
-            else
-            {
-                _isSelectedTag = true;
-                var selectedObject = newObj.DrawingObject;
-                if (selectedObject is Edge edge)
+                var objectUnderCursor = gViewer1?.ObjectUnderMouseCursor;
+                if (objectUnderCursor == null)
                 {
-                    if (edge.UserData is ShapeTag tag)
+                    _isSelectedTag = false;
+                    textBox_tag.Clear();
+                }
+                else if (objectUnderCursor.DrawingObject is DrawingObject o && o.IsVisible)
+                {
+                    _isSelectedTag = true;
+                    var selectedObject = objectUnderCursor.DrawingObject;
+                    if (selectedObject is Edge edge)
+                    {
+                        if (edge.UserData is ShapeTag tag)
+                        {
+                            textBox_tag.Text = tag.ToString();
+                        }
+                    }
+                    else if (selectedObject is Node node && node.UserData is ShapeTag tag)
                     {
                         textBox_tag.Text = tag.ToString();
                     }
                 }
-                else if (selectedObject is Node node && node.UserData is ShapeTag tag)
-                {
-                    textBox_tag.Text = tag.ToString();
-                }
+            }
+        }
+
+        private void HideLinksToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            HideLinks(gViewer1.Graph, _currentState);
+        }
+
+        private void HideStateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            HideState(gViewer1.Graph, _currentState, true);
+        }
+
+        private void unhideAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UnHideAll(gViewer1.Graph);
+        }
+
+        private void ContextMenuStrip1_Opening(object sender, CancelEventArgs e)
+        {
+            var objectUnderCursor = gViewer1?.ObjectUnderMouseCursor?.DrawingObject;
+            if (objectUnderCursor is Subgraph state && state.IsVisible)
+            {
+                _currentState = state;
+                contextMenuStrip1.Items[0].Visible = true;
+                contextMenuStrip1.Items[1].Visible = true;
+            }
+            else
+            {
+                contextMenuStrip1.Items[0].Visible = false;
+                contextMenuStrip1.Items[1].Visible = false;
             }
         }
 
@@ -393,7 +442,7 @@ namespace WorkFlowDiagram
             stateLinks = new List<StateLink>();
 
             // find state defined
-            var stateObject = pathList.FirstOrDefault(n => n.Path.Equals(RootName + _pathDivider + "state", StringComparison.OrdinalIgnoreCase));
+            var stateObject = pathList.FirstOrDefault(n => n.Path.Equals(RootName + PathDivider + "state", StringComparison.OrdinalIgnoreCase));
 
             if (stateObject == null)
                 return;
@@ -417,7 +466,7 @@ namespace WorkFlowDiagram
             var buttons = pathList
                 .Where(n =>
                     n.Name.Equals("data", StringComparison.OrdinalIgnoreCase)
-                    && n.ParentPath.StartsWith(RootName + _pathDivider + "buttons", StringComparison.OrdinalIgnoreCase))
+                    && n.ParentPath.StartsWith(RootName + PathDivider + "buttons", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             foreach (var button in buttons)
@@ -462,7 +511,7 @@ namespace WorkFlowDiagram
             var transitions = pathList
                 .Where(n =>
                     n.Name.Equals("state", StringComparison.OrdinalIgnoreCase)
-                    && n.ParentPath.Contains(_pathDivider + "transition"))
+                    && n.ParentPath.Contains(PathDivider + "transition"))
                 .ToList();
 
             // generate links from current state
@@ -471,11 +520,11 @@ namespace WorkFlowDiagram
                 foreach (var transition in transitions)
                 {
                     // get the name of the method which is running the transition for description
-                    var actionName = pathList.FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase) && n.ParentPath == TrimPathEnd(transition.ParentPath, 1, _pathDivider));
+                    var actionName = pathList.FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase) && n.ParentPath == TrimPathEnd(transition.ParentPath, 1, PathDivider));
 
                     if (actionName == null)
                     {
-                        actionName = pathList.FirstOrDefault(n => n.Name.Equals("entry", StringComparison.OrdinalIgnoreCase) && n.ParentPath == TrimPathEnd(transition.ParentPath, 2, _pathDivider));
+                        actionName = pathList.FirstOrDefault(n => n.Name.Equals("entry", StringComparison.OrdinalIgnoreCase) && n.ParentPath == TrimPathEnd(transition.ParentPath, 2, PathDivider));
                         if (actionName == null)
                         {
                             continue;
@@ -513,21 +562,21 @@ namespace WorkFlowDiagram
             // find all calculated transitions defined and create links for them
             var ctransitions = pathList.Where(n =>
                 n.Name.Equals("calculatedState", StringComparison.OrdinalIgnoreCase)
-                && n.ParentPath.Contains(_pathDivider + "transition"))
+                && n.ParentPath.Contains(PathDivider + "transition"))
                 .ToList();
             var nextStateTransitions = ctransitions.Where(n => n.Value == "NextStateByInitialRiskValue");
             if (nextStateTransitions.Any())
             {
                 foreach (var cState in nextStateTransitions)
                 {
-                    var calcutatedTransitions = pathList.Where(n => n.ParentPath.Equals(cState.ParentPath + _pathDivider + "calculatedStateParams", StringComparison.OrdinalIgnoreCase));
+                    var calcutatedTransitions = pathList.Where(n => n.ParentPath.Equals(cState.ParentPath + PathDivider + "calculatedStateParams", StringComparison.OrdinalIgnoreCase));
 
                     foreach (var transition in calcutatedTransitions)
                     {
                         // get the name of the method which is running the transition for description
                         var actionName = pathList
                             .FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase)
-                                && n.ParentPath.Equals(TrimPathEnd(transition.ParentPath, 2, _pathDivider), StringComparison.OrdinalIgnoreCase))?
+                                && n.ParentPath.Equals(TrimPathEnd(transition.ParentPath, 2, PathDivider), StringComparison.OrdinalIgnoreCase))?
                             .Value ?? "";
 
                         var newLink = new StateLink()
@@ -553,7 +602,7 @@ namespace WorkFlowDiagram
             {
                 foreach (var returnLink in returnLinks)
                 {
-                    var actionName = pathList.FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase) && n.ParentPath.Equals(TrimPathEnd(returnLink.ParentPath, 1, _pathDivider), StringComparison.OrdinalIgnoreCase));
+                    var actionName = pathList.FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase) && n.ParentPath.Equals(TrimPathEnd(returnLink.ParentPath, 1, PathDivider), StringComparison.OrdinalIgnoreCase));
 
                     var newReturnTag = new ShapeTag();
                     {
@@ -592,7 +641,7 @@ namespace WorkFlowDiagram
             var intenalButtons = new List<StateButton>();
             foreach (var buttonArray in intButtons)
             {
-                var buttons = pathList.Where(n => n.Path.StartsWith(buttonArray.Path, StringComparison.OrdinalIgnoreCase) && n.Path.EndsWith(_pathDivider + "caption", StringComparison.OrdinalIgnoreCase) && n.Depth == buttonArray.Depth + 2);
+                var buttons = pathList.Where(n => n.Path.StartsWith(buttonArray.Path, StringComparison.OrdinalIgnoreCase) && n.Path.EndsWith(PathDivider + "caption", StringComparison.OrdinalIgnoreCase) && n.Depth == buttonArray.Depth + 2);
                 foreach (var button in buttons)
                 {
                     var methodName = pathList.FirstOrDefault(n => n.ParentPath.Equals(button.ParentPath, StringComparison.OrdinalIgnoreCase) && n.Name.Equals("action", StringComparison.OrdinalIgnoreCase));
@@ -639,7 +688,7 @@ namespace WorkFlowDiagram
                 return;
 
             // find state defined
-            var stateObject = pathList.FirstOrDefault(n => n.Path.Equals(RootName + _pathDivider + "name", StringComparison.OrdinalIgnoreCase));
+            var stateObject = pathList.FirstOrDefault(n => n.Path.Equals(RootName + PathDivider + "name", StringComparison.OrdinalIgnoreCase));
             var stateDescription = pathList.FirstOrDefault(n => n.Name == "description" && n.ParentPath.Equals(stateObject?.ParentPath, StringComparison.OrdinalIgnoreCase))?.Value ?? "";
 
             if (stateObject == null)
@@ -658,7 +707,7 @@ namespace WorkFlowDiagram
             };
 
             // find all buttons
-            var buttons = pathList.Where(n => n.Name.Equals("title", StringComparison.OrdinalIgnoreCase) && n.ParentPath.StartsWith(RootName + _pathDivider + "data" + _pathDivider + "buttons", StringComparison.OrdinalIgnoreCase)).ToList();
+            var buttons = pathList.Where(n => n.Name.Equals("title", StringComparison.OrdinalIgnoreCase) && n.ParentPath.StartsWith(RootName + PathDivider + "data" + PathDivider + "buttons", StringComparison.OrdinalIgnoreCase)).ToList();
             foreach (var button in buttons)
             {
                 var methodsNames = pathList
@@ -706,7 +755,7 @@ namespace WorkFlowDiagram
                 var actionNameStr = actionName?.Name ?? "";
                 if (actionName != null && string.IsNullOrEmpty(actionNameStr))
                 {
-                    var i = actionName.Path?.LastIndexOf(_pathDivider) ?? 0;
+                    var i = actionName.Path?.LastIndexOf(PathDivider) ?? 0;
                     if (i > 1)
                     {
                         actionNameStr = actionName.Path?.Substring(i + 1) ?? "";
@@ -1143,7 +1192,7 @@ namespace WorkFlowDiagram
             else
                 textEditor.Text = longFileName;
 
-            textEditor.HighlightPathJson(jsonPath, _pathDivider);
+            textEditor.HighlightPathJson(jsonPath, PathDivider);
         }
 
         private static void VsCodeOpenFile(string command)
@@ -1205,10 +1254,59 @@ namespace WorkFlowDiagram
                 else
                     break;
             }
-
             return originalPath;
         }
 
+        void HideState(Graph graph, Node state, bool removeLinks)
+        {
+            state.IsVisible = false;
+
+            if (state is Subgraph sg)
+            {
+                foreach (var node in sg.Nodes)
+                {
+                    node.IsVisible = false;
+                }
+            }
+
+            if (removeLinks)
+            {
+                HideLinks(graph, state);
+            }
+        }
+
+        void HideLinks(Graph graph, Node state)
+        {
+            foreach (var edge in graph.Edges.Where(n => n.SourceNode == state))
+            {
+                edge.IsVisible = false;
+            }
+
+            foreach (var edge in graph.Edges.Where(n => n.TargetNode == state))
+            {
+                edge.IsVisible = false;
+            }
+        }
+
+        void UnHideAll(Graph graph)
+        {
+            foreach (var s in graph.SubgraphMap)
+            {
+                s.Value.IsVisible = true;
+            }
+
+            foreach (var node in graph.Nodes)
+            {
+                node.IsVisible = true;
+            }
+
+            foreach (var edge in graph.Edges)
+            {
+                edge.IsVisible = true;
+            }
+        }
+
         #endregion Utilities
+
     }
 }

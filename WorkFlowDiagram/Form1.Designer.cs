@@ -28,8 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.gViewer1 = new Microsoft.Msagl.GraphViewerGdi.GViewer();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.hideStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hideLinksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.unhideAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.button_loadWorkFlow = new System.Windows.Forms.Button();
             this.checkBox_useShelf = new System.Windows.Forms.CheckBox();
@@ -39,6 +44,7 @@
             this.comboBox_layoutMode = new System.Windows.Forms.ComboBox();
             this.textBox_tag = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // gViewer1
@@ -51,6 +57,7 @@
             this.gViewer1.AutoScroll = true;
             this.gViewer1.BackwardEnabled = false;
             this.gViewer1.BuildHitTree = true;
+            this.gViewer1.ContextMenuStrip = this.contextMenuStrip1;
             this.gViewer1.CurrentLayoutMethod = Microsoft.Msagl.GraphViewerGdi.LayoutMethod.UseSettingsOfTheGraph;
             this.gViewer1.EdgeInsertButtonVisible = true;
             this.gViewer1.FileName = "";
@@ -88,6 +95,37 @@
             this.gViewer1.DoubleClick += new System.EventHandler(this.GViewer1_DoubleClick);
             this.gViewer1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GViewer1_MouseClick);
             this.gViewer1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GViewer1_MouseDown);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.hideStateToolStripMenuItem,
+            this.hideLinksToolStripMenuItem,
+            this.unhideAllToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 92);
+            this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.ContextMenuStrip1_Opening);
+            // 
+            // hideStateToolStripMenuItem
+            // 
+            this.hideStateToolStripMenuItem.Name = "hideStateToolStripMenuItem";
+            this.hideStateToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hideStateToolStripMenuItem.Text = "Hide state";
+            this.hideStateToolStripMenuItem.Click += new System.EventHandler(this.HideStateToolStripMenuItem_Click);
+            // 
+            // hideLinksToolStripMenuItem
+            // 
+            this.hideLinksToolStripMenuItem.Name = "hideLinksToolStripMenuItem";
+            this.hideLinksToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hideLinksToolStripMenuItem.Text = "Hide links";
+            this.hideLinksToolStripMenuItem.Click += new System.EventHandler(this.HideLinksToolStripMenuItem_Click);
+            // 
+            // unhideAllToolStripMenuItem
+            // 
+            this.unhideAllToolStripMenuItem.Name = "unhideAllToolStripMenuItem";
+            this.unhideAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.unhideAllToolStripMenuItem.Text = "Un-hide all";
+            this.unhideAllToolStripMenuItem.Click += new System.EventHandler(this.unhideAllToolStripMenuItem_Click);
             // 
             // button_loadWorkFlow
             // 
@@ -191,6 +229,7 @@
             this.Text = "Form1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -208,5 +247,9 @@
         private ComboBox comboBox_layoutMode;
         private TextBox textBox_tag;
         private Label label2;
+        private ContextMenuStrip contextMenuStrip1;
+        private ToolStripMenuItem hideStateToolStripMenuItem;
+        private ToolStripMenuItem hideLinksToolStripMenuItem;
+        private ToolStripMenuItem unhideAllToolStripMenuItem;
     }
 }
