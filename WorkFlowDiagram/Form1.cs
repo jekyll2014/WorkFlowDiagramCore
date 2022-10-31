@@ -576,13 +576,29 @@ namespace WorkFlowDiagram
                         // get the name of the method which is running the transition for description
                         var actionName = pathList
                             .FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase)
-                                && n.ParentPath.Equals(TrimPathEnd(transition.ParentPath, 2, PathDivider), StringComparison.OrdinalIgnoreCase))?
-                            .Value ?? "";
+                                && n.ParentPath.Equals(TrimPathEnd(transition.ParentPath, 2, PathDivider), StringComparison.OrdinalIgnoreCase));
+
+                        if (actionName == null)
+                        {
+                            continue;
+                        }
+
+                        var newAction = new StateAction()
+                        {
+                            Label = actionName.JsonPropertyType == JsonPropertyType.Property ? actionName.Value : actionName.Name,
+                            Tag = new ShapeTag
+                            {
+                                FileName = filePath,
+                                JsonPath = actionName.Path,
+                                Color = _defaultActionColor
+                            },
+                        };
+                        state.StateActions.Add(newAction);
 
                         var newLink = new StateLink()
                         {
                             FromState = state.Id,
-                            FromAction = actionName,
+                            FromAction = newAction.Id,
                             ToState = transition.Name,
                             Tag = new ShapeTag
                             {
@@ -604,12 +620,12 @@ namespace WorkFlowDiagram
                 {
                     var actionName = pathList.FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase) && n.ParentPath.Equals(TrimPathEnd(returnLink.ParentPath, 1, PathDivider), StringComparison.OrdinalIgnoreCase));
 
-                    var newReturnTag = new ShapeTag();
+                    var newReturnTag = new ShapeTag()
                     {
-                        newReturnTag.Description = returnLink.Value;
-                        newReturnTag.FileName = filePath;
-                        newReturnTag.JsonPath = returnLink.Path;
-                    }
+                        Description = returnLink.Value,
+                        FileName = filePath,
+                        JsonPath = returnLink.Path
+                    };
 
                     var stateActions = new StateAction()
                     {
