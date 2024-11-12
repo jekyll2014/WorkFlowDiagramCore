@@ -9,5 +9,6 @@ namespace WorkFlowDiagram
         public bool UseVsCode = false;
         public bool ShowStateElements = true;
         public string LastFolder = "";
+        public string LastFile = "";
     }
 }

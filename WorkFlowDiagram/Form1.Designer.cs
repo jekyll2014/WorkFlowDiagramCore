@@ -44,6 +44,8 @@
             this.comboBox_layoutMode = new System.Windows.Forms.ComboBox();
             this.textBox_tag = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -86,11 +88,13 @@
             this.gViewer1.TightOffsetForRouting = 0.125D;
             this.gViewer1.ToolBarIsVisible = true;
             this.gViewer1.Transform = ((Microsoft.Msagl.Core.Geometry.Curves.PlaneTransformation)(resources.GetObject("gViewer1.Transform")));
-            this.gViewer1.UndoRedoButtonsVisible = false;
+            this.gViewer1.UndoRedoButtonsVisible = true;
             this.gViewer1.WindowZoomButtonPressed = false;
             this.gViewer1.ZoomF = 1D;
             this.gViewer1.ZoomWindowThreshold = 0.05D;
             this.gViewer1.ObjectUnderMouseCursorChanged += new System.EventHandler<Microsoft.Msagl.Drawing.ObjectUnderMouseCursorChangedEventArgs>(this.GViewer1_ObjectUnderMouseCursorChanged);
+            this.gViewer1.CustomOpenButtonPressed += new System.EventHandler<System.ComponentModel.HandledEventArgs>(this.GViewer1_CustomOpenButtonPressed);
+            this.gViewer1.GraphSavingEnded += new System.EventHandler(this.GViewer1_GraphSavingEnded);
             this.gViewer1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GViewer1_MouseMove);
             this.gViewer1.DoubleClick += new System.EventHandler(this.GViewer1_DoubleClick);
             this.gViewer1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GViewer1_MouseClick);
@@ -103,29 +107,29 @@
             this.hideLinksToolStripMenuItem,
             this.unhideAllToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 92);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(133, 70);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.ContextMenuStrip1_Opening);
             // 
             // hideStateToolStripMenuItem
             // 
             this.hideStateToolStripMenuItem.Name = "hideStateToolStripMenuItem";
-            this.hideStateToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hideStateToolStripMenuItem.Size = new System.Drawing.Size(132, 22);
             this.hideStateToolStripMenuItem.Text = "Hide state";
             this.hideStateToolStripMenuItem.Click += new System.EventHandler(this.HideStateToolStripMenuItem_Click);
             // 
             // hideLinksToolStripMenuItem
             // 
             this.hideLinksToolStripMenuItem.Name = "hideLinksToolStripMenuItem";
-            this.hideLinksToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hideLinksToolStripMenuItem.Size = new System.Drawing.Size(132, 22);
             this.hideLinksToolStripMenuItem.Text = "Hide links";
             this.hideLinksToolStripMenuItem.Click += new System.EventHandler(this.HideLinksToolStripMenuItem_Click);
             // 
             // unhideAllToolStripMenuItem
             // 
             this.unhideAllToolStripMenuItem.Name = "unhideAllToolStripMenuItem";
-            this.unhideAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.unhideAllToolStripMenuItem.Size = new System.Drawing.Size(132, 22);
             this.unhideAllToolStripMenuItem.Text = "Un-hide all";
-            this.unhideAllToolStripMenuItem.Click += new System.EventHandler(this.unhideAllToolStripMenuItem_Click);
+            this.unhideAllToolStripMenuItem.Click += new System.EventHandler(this.UnhideAllToolStripMenuItem_Click);
             // 
             // button_loadWorkFlow
             // 
@@ -211,6 +215,10 @@
             this.label2.TabIndex = 6;
             this.label2.Text = "Element notes:";
             // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -251,5 +259,7 @@
         private ToolStripMenuItem hideStateToolStripMenuItem;
         private ToolStripMenuItem hideLinksToolStripMenuItem;
         private ToolStripMenuItem unhideAllToolStripMenuItem;
+        private SaveFileDialog saveFileDialog1;
+        private OpenFileDialog openFileDialog1;
     }
 }

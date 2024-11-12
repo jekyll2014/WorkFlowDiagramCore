@@ -88,7 +88,7 @@ namespace WorkFlowDiagram
         private PlaneTransformation? _mouseDownTransform;
         private Point _mouseDownPoint;
 
-        private Node _currentState;
+        private Node? _currentState;
 
         #region GUI
 
@@ -126,7 +126,6 @@ namespace WorkFlowDiagram
                 SearchStartOnly = true
             };
 
-            //comboBox_layoutMode.Items.AddRange(Enum.GetNames(typeof(Microsoft.Msagl.GraphViewerGdi.LayoutMethod)));
             comboBox_layoutMode.Items.Add(Enum.GetName(LayoutMethod.SugiyamaScheme));
             comboBox_layoutMode.Items.Add(Enum.GetName(LayoutMethod.IcrementalLayout));
             comboBox_layoutMode.SelectedItem = _currentLayoutMode.ToString();
@@ -134,9 +133,10 @@ namespace WorkFlowDiagram
             string[] args = Environment.GetCommandLineArgs();
             if (args.Length == 2 && args[1].EndsWith(".msagl"))
             {
-                gViewer1.NeedToCalculateLayout = false;
-                gViewer1.Graph = Graph.Read(args[1]);
-                gViewer1.NeedToCalculateLayout = true;
+                LoadFile(args[1]);
+                gViewer1.FileName = args[1];
+                configBuilder.ConfigStorage.LastFile = args[1];
+                this.Text = _formCaption + ": " + args[1];
             }
         }
 
@@ -181,54 +181,8 @@ namespace WorkFlowDiagram
                 SearchOption.AllDirectories);
 
             LoadStates(filesList);
-        }
 
-        private void LoadStates(IEnumerable<string> filesList)
-        {
-            var states = new List<State>();
-            var links = new List<StateLink>();
-            foreach (var file in filesList)
-            {
-                var newPathList = ParseJson(file, _parser);
-
-                if (newPathList == null)
-                    continue;
-
-                State? newState;
-                List<StateLink> newLinks;
-
-                if (configBuilder.ConfigStorage.useShelf)
-                    GetStateShelf(newPathList, file, out newState, out newLinks);
-                else
-                    GetStateNlmk(newPathList, file, out newState, out newLinks);
-
-                if (newState != null)
-                {
-                    states.Add(newState);
-
-                    if (newLinks != null && newLinks.Any())
-                    {
-                        links.AddRange(newLinks);
-                    }
-                }
-            }
-
-            var flowName = new DirectoryInfo(folderBrowserDialog1.SelectedPath).Name;
-            var graph = InitProject(flowName);
-
-            FixStateLinks(ref links, states);
-            states.AddRange(FindOrphanStates(states, links));
-            FixStateLinks(ref links, states);
-            FindBiDirectionalLinks(states, ref links);
-            FindStartingStates(ref states, links);
-            FindEndingStates(ref states, links);
-
-            CreateStates(graph, states);
-            CreateLinks(graph, links);
-
-            gViewer1.Focus();
-
-            RefreshLayout(graph);
+            this.Text = _formCaption + ": " + folderBrowserDialog1.SelectedPath;
         }
 
         private void CheckBox_UseShelf_CheckedChanged(object sender, EventArgs e)
@@ -401,7 +355,7 @@ namespace WorkFlowDiagram
             HideState(gViewer1.Graph, _currentState, true);
         }
 
-        private void unhideAllToolStripMenuItem_Click(object sender, EventArgs e)
+        private void UnhideAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
             UnHideAll(gViewer1.Graph);
         }
@@ -425,6 +379,62 @@ namespace WorkFlowDiagram
         #endregion GUI
 
         #region Utilities
+
+        private void LoadFile(string fullFileName)
+        {
+            gViewer1.NeedToCalculateLayout = false;
+            gViewer1.Graph = Graph.Read(fullFileName);
+            gViewer1.FileName = fullFileName;
+            gViewer1.NeedToCalculateLayout = true;
+        }
+
+        private void LoadStates(IEnumerable<string> filesList)
+        {
+            var states = new List<State>();
+            var links = new List<StateLink>();
+            foreach (var file in filesList)
+            {
+                var newPathList = ParseJson(file, _parser);
+
+                if (newPathList == null)
+                    continue;
+
+                State? newState;
+                List<StateLink> newLinks;
+
+                if (configBuilder.ConfigStorage.useShelf)
+                    GetStateShelf(newPathList, file, out newState, out newLinks);
+                else
+                    GetStateNlmk(newPathList, file, out newState, out newLinks);
+
+                if (newState != null)
+                {
+                    states.Add(newState);
+
+                    if (newLinks != null && newLinks.Any())
+                    {
+                        links.AddRange(newLinks);
+                    }
+                }
+            }
+
+            var flowName = new DirectoryInfo(folderBrowserDialog1.SelectedPath).Name;
+            var graph = InitProject(flowName);
+
+            FixStateLinks(ref links, states);
+            states.AddRange(FindOrphanStates(states, links));
+            FixStateLinks(ref links, states);
+            FindBiDirectionalLinks(states, ref links);
+            FindStartingStates(ref states, links);
+            FindEndingStates(ref states, links);
+
+            CreateStates(graph, states);
+            CreateLinks(graph, links);
+
+            gViewer1.Focus();
+
+            RefreshLayout(graph);
+        }
 
         private Graph InitProject(string currentDiagramName)
         {
@@ -479,7 +489,7 @@ namespace WorkFlowDiagram
                         && n.ParentPath.Equals(button.Path, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                var internalButtons = FindInternalButtons(pathList, filePath, button);
+                var internalButtons = FindInternalButtonsRecursive(pathList, filePath, button);
 
                 var newButton = new StateButton()
                 {
@@ -644,7 +654,7 @@ namespace WorkFlowDiagram
             }
         }
 
-        private List<StateButton> FindInternalButtons(IEnumerable<ParsedProperty> pathList, string filePath, ParsedProperty startProperty)
+        private List<StateButton> FindInternalButtonsRecursive(IEnumerable<ParsedProperty> pathList, string filePath, ParsedProperty startProperty)
         {
             // find all internal buttons
             var intButtons = pathList
@@ -661,7 +671,7 @@ namespace WorkFlowDiagram
                 foreach (var button in buttons)
                 {
                     var methodName = pathList.FirstOrDefault(n => n.ParentPath.Equals(button.ParentPath, StringComparison.OrdinalIgnoreCase) && n.Name.Equals("action", StringComparison.OrdinalIgnoreCase));
-                    var internalButtons = FindInternalButtons(pathList, filePath, button);
+                    var internalButtons = FindInternalButtonsRecursive(pathList, filePath, button);
 
                     var newButton = new StateButton()
                     {
@@ -763,10 +773,10 @@ namespace WorkFlowDiagram
 
             // Generate links from current state
             // state_name_to, filter_method_name
-            foreach (var transition in transitions)
+            foreach (var transitionPath in transitions.Select(n => n.ParentPath))
             {
-                var actionName = pathList.FirstOrDefault(n => n.Path == transition.ParentPath);
-                var transitionName = pathList.FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase) && n.ParentPath == transition.ParentPath);
+                var actionName = pathList.FirstOrDefault(n => n.Path == transitionPath);
+                var transitionName = pathList.FirstOrDefault(n => n.Name.Equals("name", StringComparison.OrdinalIgnoreCase) && n.ParentPath == transitionPath);
 
                 var actionNameStr = actionName?.Name ?? "";
                 if (actionName != null && string.IsNullOrEmpty(actionNameStr))
@@ -1005,7 +1015,6 @@ namespace WorkFlowDiagram
         {
             var arrow = graph.AddEdge(fromName, toName);
             arrow.UserData = tag;
-            // arrow.LabelText = tag.Description;
             arrow.Attr.ArrowheadAtTarget = _arrowLineType;
             arrow.Attr.ArrowheadLength = 30;
 
@@ -1073,9 +1082,9 @@ namespace WorkFlowDiagram
                 // create reverse links to all links defined in the remote state
                 if (remoteState != null)
                 {
-                    var actions = remoteState.StateActions.Where(n => n.ToPreviousState)?.Select(n => n.Id).ToList();
+                    var actions = remoteState.StateActions.Where(n => n.ToPreviousState)?.Select(n => n.Id)?.ToList();
 
-                    if (actions.Any())
+                    if (actions != null && actions.Any())
                         link.BiDirectional = actions;
                 }
             }
@@ -1273,8 +1282,11 @@ namespace WorkFlowDiagram
             return originalPath;
         }
 
-        void HideState(Graph graph, Node state, bool removeLinks)
+        static void HideState(Graph graph, Node state, bool removeLinks)
         {
+            if (state == null)
+                return;
+
             state.IsVisible = false;
 
             if (state is Subgraph sg)
@@ -1291,20 +1303,18 @@ namespace WorkFlowDiagram
             }
         }
 
-        void HideLinks(Graph graph, Node state)
+        static void HideLinks(Graph graph, Node state)
         {
-            foreach (var edge in graph.Edges.Where(n => n.SourceNode == state))
-            {
-                edge.IsVisible = false;
-            }
+            if (state == null)
+                return;
 
-            foreach (var edge in graph.Edges.Where(n => n.TargetNode == state))
+            foreach (var edge in graph.Edges.Where(n => n.SourceNode == state || n.TargetNode == state))
             {
                 edge.IsVisible = false;
             }
         }
 
-        void UnHideAll(Graph graph)
+        static void UnHideAll(Graph graph)
         {
             foreach (var s in graph.SubgraphMap)
             {
@@ -1324,5 +1334,24 @@ namespace WorkFlowDiagram
 
         #endregion Utilities
 
+        private void GViewer1_GraphSavingEnded(object sender, EventArgs e)
+        {
+            if (gViewer1?.FileName?.EndsWith(".msagl") ?? false)
+                this.Text = _formCaption + ": " + gViewer1.FileName;
+        }
+
+        private void GViewer1_CustomOpenButtonPressed(object sender, HandledEventArgs e)
+        {
+            openFileDialog1.FileName = string.IsNullOrEmpty(gViewer1.FileName) ? gViewer1.FileName : configBuilder.ConfigStorage.LastFile;
+
+            if (openFileDialog1.ShowDialog() != DialogResult.OK
+                || string.IsNullOrEmpty(openFileDialog1.FileName))
+                return;
+
+            LoadFile(openFileDialog1.FileName);
+            configBuilder.ConfigStorage.LastFile = openFileDialog1.FileName;
+            this.Text = _formCaption + ": " + openFileDialog1.FileName;
+            e.Handled = true;
+        }
     }
 }
